@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Log in — Sift{% endblock %}
+{% block content %}
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="nav-mark" style="margin-bottom: 8px;">Sift<span>.</span></div>
+    <p style="color: var(--slate); margin: 0 0 28px; font-size: 14.5px;">Log in to screen and review candidates.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Log in</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

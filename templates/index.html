@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Sift — Find the right resume, faster{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">Resume screening, made explainable</div>
+      <h1>Stop reading every resume. Start ranking them.</h1>
+      <p class="lede">
+        Paste a job description, drop in a stack of resumes, and Sift ranks every
+        candidate by fit — showing exactly which skills matched and which are missing.
+        No black box, no guesswork.
+      </p>
+      <div class="hero-actions">
+        <a href="{{ url_for('screen') }}" class="btn btn-primary">Screen your first batch</a>
+        <a href="#how" class="btn btn-ghost">See how it works</a>
+      </div>
+    </div>
+    <div class="hero-demo">
+      <div class="hero-demo-title">SAMPLE RANKING FOR "BACKEND ENGINEER"</div>
+      <div class="demo-row">
+        <div class="demo-name">A. Rahman</div>
+        <div class="demo-bar-track"><div class="demo-bar-fill" style="width: 92%"></div></div>
+        <div class="demo-score">92%</div>
+      </div>
+      <div class="demo-row">
+        <div class="demo-name">S. Khan</div>
+        <div class="demo-bar-track"><div class="demo-bar-fill" style="width: 74%"></div></div>
+        <div class="demo-score">74%</div>
+      </div>
+      <div class="demo-row">
+        <div class="demo-name">M. Ali</div>
+        <div class="demo-bar-track"><div class="demo-bar-fill" style="width: 51%"></div></div>
+        <div class="demo-score">51%</div>
+      </div>
+      <div class="demo-row">
+        <div class="demo-name">R. Iqbal</div>
+        <div class="demo-bar-track"><div class="demo-bar-fill" style="width: 33%"></div></div>
+        <div class="demo-score">33%</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Built for the part of hiring nobody enjoys</h2>
+      <p>A recruiter screening 80 resumes for one role spends hours doing keyword matching by eye. Sift does the first pass in seconds, and shows its work.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-num">Skill matching</div>
+        <h3>Transparent scoring</h3>
+        <p>Every score breaks down into matched and missing skills — never a mystery number.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-num">Bulk upload</div>
+        <h3>Screen in batches</h3>
+        <p>Upload a stack of PDFs, DOCX, or text resumes at once and get one ranked list back.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-num">Export ready</div>
+        <h3>Shortlist to CSV</h3>
+        <p>Download the ranked shortlist as a spreadsheet to share with a hiring panel.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how" style="padding-top: 0;">
+  <div class="container">
+    <div class="section-head">
+      <h2>How it works</h2>
+      <p>Three steps, no setup required.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-index">1</div>
+        <h4>Paste the job description</h4>
+        <p>Sift extracts the required skills and experience level automatically.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-index">2</div>
+        <h4>Upload resumes</h4>
+        <p>Drop in as many candidate files as you have — PDF, Word, or plain text.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-index">3</div>
+        <h4>Review the ranking</h4>
+        <p>See every candidate scored and sorted, with matched and missing skills laid out.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

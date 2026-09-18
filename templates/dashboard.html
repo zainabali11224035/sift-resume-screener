@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <h1>{{ "All job postings" if current_user.is_admin else "Your job postings" }}</h1>
+      <p>{{ "Every screening across the team." if current_user.is_admin else "Screenings you've run." }}</p>
+    </div>
+    <a href="{{ url_for('screen') }}" class="btn btn-primary">Screen new batch</a>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if jobs %}
+      <div class="candidate-list">
+        {% for job in jobs %}
+        <a href="{{ url_for('results', job_id=job.id) }}" class="job-row">
+          <div>
+            <h3>{{ job.title }}</h3>
+            <div class="meta">
+              {{ job.candidate_count }} candidate{{ 's' if job.candidate_count != 1 else '' }}
+              {% if current_user.is_admin %} · screened by {{ job.created_by_name or "Unknown" }}{% endif %}
+              · {{ job.created_at }}
+            </div>
+          </div>
+          <span class="job-row-arrow">View results →</span>
+        </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No job postings yet.</p>
+        <a href="{{ url_for('screen') }}" class="btn btn-primary">Screen your first batch</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

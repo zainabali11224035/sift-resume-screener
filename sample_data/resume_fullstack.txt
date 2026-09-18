@@ -1,0 +1,14 @@
+Bilal Ahmed
+bilal.ahmed@example.com | +92 333 4455667
+
+Summary
+Full-stack developer with 5 years of experience across frontend and backend.
+
+Skills
+Python, JavaScript, React, Flask, Django, SQL, PostgreSQL, Docker, AWS, Git, REST API
+
+Experience
+Full-Stack Developer, CloudNine Systems (2020-2025)
+- Built and deployed Flask and Django APIs backed by PostgreSQL
+- Developed React frontends consuming those APIs
+- Managed deployments using Docker and AWS

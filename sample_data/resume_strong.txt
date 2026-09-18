@@ -1,0 +1,13 @@
+Ayesha Rahman
+ayesha.rahman@example.com | +92 300 1234567
+
+Summary
+Backend developer with 4 years of experience building scalable web services.
+
+Skills
+Python, Flask, Django, SQL, PostgreSQL, Docker, Git, REST API, AWS
+
+Experience
+Backend Engineer, TechCorp (2021-2025)
+- Built and maintained REST APIs using Flask and PostgreSQL
+- Deployed services on AWS using Docker

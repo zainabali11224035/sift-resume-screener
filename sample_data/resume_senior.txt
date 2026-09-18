@@ -1,0 +1,14 @@
+Farah Siddiqui
+farah.siddiqui@example.com | +92 321 7788990
+
+Summary
+Senior backend engineer with 9 years of experience leading development teams.
+
+Skills
+Python, Flask, Django, SQL, PostgreSQL, MongoDB, Docker, Kubernetes, AWS, Azure, Microservices, CI/CD, Git
+
+Experience
+Lead Backend Engineer, Nimbus Cloud (2016-2025)
+- Led a team building microservices in Flask and Django
+- Migrated infrastructure to Kubernetes on AWS and Azure
+- Set up CI/CD pipelines for the whole backend team

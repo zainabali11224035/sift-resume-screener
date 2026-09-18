@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Guidelines — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container">
+    <h1>Guidelines</h1>
+    <p>How Sift scores candidates, and where it falls short.</p>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container section-narrow guidelines-body">
+
+    <h2>How scoring works</h2>
+    <p>
+      Every candidate gets an overall score out of 100, made of two parts:
+    </p>
+    <ul>
+      <li><strong>Skill match (70% of the score)</strong> — the share of the job's required skills that appear in the resume, checked against a fixed skills list.</li>
+      <li><strong>Text similarity (30% of the score)</strong> — how closely the overall wording of the resume matches the job description, using TF-IDF and cosine similarity.</li>
+    </ul>
+    <p>
+      Skill match is weighted higher because it's the part a recruiter can verify at a glance. Text similarity catches relevant experience that isn't captured by an exact skill name.
+    </p>
+
+    <h2>Supported file types</h2>
+    <ul>
+      <li><code>.pdf</code> — text-based PDFs only. Scanned or image-only PDFs will not extract any text (no OCR is performed).</li>
+      <li><code>.docx</code> — standard Word documents.</li>
+      <li><code>.txt</code> — plain text resumes.</li>
+    </ul>
+
+    <h2>What the parser extracts</h2>
+    <ul>
+      <li><strong>Name</strong> — assumed to be the first line of the resume that isn't an email or phone number. This is a heuristic and can be wrong for unusually formatted resumes.</li>
+      <li><strong>Email and phone</strong> — matched via pattern recognition; may miss unusual formats.</li>
+      <li><strong>Skills</strong> — matched against a fixed, editable list of ~60 common technical and professional skills. A skill not in this list will never be detected, even if the candidate has it.</li>
+      <li><strong>Years of experience</strong> — only detected when stated explicitly, e.g. "5 years of experience." Experience implied by a work history timeline is not currently calculated.</li>
+    </ul>
+
+    <h2>Known limitations</h2>
+    <ul>
+      <li>This is a first-pass filter, not a hiring decision. A low score does not mean a candidate is unqualified — it means the resume's wording didn't match the job description well.</li>
+      <li>The skills dictionary is fixed at build time. Skills specific to a niche field may not be recognized.</li>
+      <li>Name extraction is a best-effort guess and should be spot-checked for resumes with unconventional layouts (e.g. two-column templates).</li>
+      <li>Sift does not verify claims made in a resume — it only measures textual overlap with the job description.</li>
+    </ul>
+
+    <h2>Data handling</h2>
+    <p>
+      Uploaded resume files are processed in memory for scoring and deleted immediately after. Only the extracted fields (name, email, phone, skills, scores) are stored, in a local database on the machine running Sift.
+    </p>
+
+  </div>
+</div>
+
+{% endblock %}

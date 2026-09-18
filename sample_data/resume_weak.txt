@@ -1,0 +1,12 @@
+Malik Ali
+malik.ali@example.com
+
+Summary
+Recent graduate interested in software development.
+
+Skills
+Java, C++, HTML
+
+Experience
+Intern, College Lab Project
+- Built a simple calculator app in Java

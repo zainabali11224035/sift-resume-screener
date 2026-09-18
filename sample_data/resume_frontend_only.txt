@@ -1,0 +1,13 @@
+Danish Iqbal
+danish.iqbal@example.com | 0345-6677889
+
+Summary
+Frontend developer with 3 years of experience, no backend exposure.
+
+Skills
+JavaScript, TypeScript, React, Angular, HTML, CSS, Figma, UI/UX
+
+Experience
+Frontend Developer, PixelCraft (2022-2025)
+- Built responsive UIs using React and TypeScript
+- Collaborated with designers using Figma

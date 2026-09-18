@@ -1,0 +1,12 @@
+Sara Khan
+sara.khan@example.com | 0321-9876543
+
+Summary
+Frontend-focused developer with 2 years of experience, some backend exposure.
+
+Skills
+JavaScript, React, HTML, CSS, Python, SQL
+
+Experience
+Frontend Developer, WebWorks (2023-2025)
+- Built React components and integrated with Python backend APIs

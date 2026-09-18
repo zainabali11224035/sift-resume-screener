@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Screen resumes — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container">
+    <h1>Screen a batch of resumes</h1>
+    <p>Describe the role once, upload every candidate, get one ranked list.</p>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container" style="max-width: 720px;">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card">
+      <form method="POST" action="{{ url_for('screen') }}" enctype="multipart/form-data">
+        <div class="field">
+          <label for="job_title">Job title</label>
+          <input type="text" id="job_title" name="job_title" placeholder="e.g. Backend Developer" required>
+        </div>
+
+        <div class="field">
+          <label for="job_description">Job description <span class="hint">— paste the full posting, including required skills</span></label>
+          <textarea id="job_description" name="job_description" placeholder="We're looking for a Python developer with experience in Flask, SQL, and REST APIs..." required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="resumes">Resumes <span class="hint">— PDF, DOCX, or TXT, multiple files allowed</span></label>
+          <div class="file-drop">
+            <input type="file" id="resumes" name="resumes" multiple accept=".pdf,.docx,.txt" required>
+            <p>Up to 20 MB total. Scanned/image-only PDFs won't extract text — see Guidelines.</p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Rank candidates</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

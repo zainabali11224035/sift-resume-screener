@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Access denied — Sift{% endblock %}
+{% block content %}
+<div class="workspace-body" style="padding-top: 96px;">
+  <div class="container empty-state">
+    <p style="font-family: var(--font-display); font-size: 24px; color: var(--ink); margin-bottom: 8px;">Access denied</p>
+    <p>You don't have permission to view this page. This area is restricted to admin accounts.</p>
+    <a href="{{ url_for('home') }}" class="btn btn-primary" style="margin-top: 12px;">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

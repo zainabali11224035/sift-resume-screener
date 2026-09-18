@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Manage employees — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container">
+    <h1>Manage employees</h1>
+    <p>Add or remove accounts that can log in to Sift.</p>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container" style="max-width: 760px;">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card" style="margin-bottom: 28px;">
+      <h3 style="margin-top: 0;">Add a new account</h3>
+      <form method="POST" action="{{ url_for('manage_employees') }}">
+        <div class="field">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password <span class="hint">— at least 6 characters</span></label>
+          <input type="password" id="password" name="password" required minlength="6">
+        </div>
+        <div class="field">
+          <label for="role">Role</label>
+          <select id="role" name="role" style="width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); font-family: var(--font-body); font-size: 15px; background: var(--paper);">
+            <option value="employee">Employee</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Create account</button>
+      </form>
+    </div>
+
+    <h3>Existing accounts</h3>
+    <div class="candidate-list">
+      {% for user in users %}
+      <div class="user-row">
+        <div>
+          <strong>{{ user.username }}</strong>
+          <span class="role-tag role-{{ user.role }}">{{ user.role }}</span>
+        </div>
+        {% if user.id != current_user.id %}
+        <form method="POST" action="{{ url_for('delete_employee', user_id=user.id) }}" onsubmit="return confirm('Remove this account? This cannot be undone.');">
+          <button type="submit" class="btn-text-danger">Remove</button>
+        </form>
+        {% else %}
+        <span style="font-size: 13px; color: var(--slate);">(you)</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

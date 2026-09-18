@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Results — {{ job.title }} — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container">
+    <h1>{{ job.title }}</h1>
+    <p>{{ candidates|length }} candidate{{ 's' if candidates|length != 1 else '' }} ranked by fit</p>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if candidates %}
+      <div class="chart-card">
+        <div class="chart-title">Overall match score by candidate</div>
+        <svg class="score-chart" viewBox="0 0 {{ 640 }} {{ candidates|length * 48 + 20 }}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bar chart of candidate match scores">
+          {% for c in candidates %}
+            {% set y = loop.index0 * 48 + 10 %}
+            {% set bar_width = (c.overall_score / 100 * 460)|round(1) %}
+            {% set bar_color = 'var(--green)' if c.overall_score >= 70 else ('var(--amber-deep)' if c.overall_score >= 40 else 'var(--coral)') %}
+            <text x="0" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--ink)">{{ c.name or "Unknown" }}</text>
+            <rect x="150" y="{{ y }}" width="460" height="20" rx="4" fill="var(--paper-dim)"></rect>
+            <rect x="150" y="{{ y }}" width="{{ bar_width }}" height="20" rx="4" fill="{{ bar_color }}"></rect>
+            <text x="{{ 150 + bar_width + 10 }}" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="12.5" fill="var(--slate)">{{ c.overall_score }}%</text>
+          {% endfor %}
+        </svg>
+      </div>
+
+      <div class="results-toolbar">
+        <h2>Sorted by overall match score</h2>
+        <a href="{{ url_for('export_csv', job_id=job.id) }}" class="btn btn-ghost" style="border-color: var(--line); color: var(--ink);">Export CSV</a>
+      </div>
+
+      <div class="candidate-list">
+        {% for c in candidates %}
+        <div class="candidate-card">
+          <div class="candidate-rank">{{ loop.index }}</div>
+
+          <div class="candidate-identity">
+            <h3>{{ c.name or "Unknown Candidate" }}</h3>
+            <div class="meta">
+              {{ c.email or "No email found" }}
+              {% if c.experience_years %} · {{ c.experience_years }} yrs experience{% endif %}
+            </div>
+          </div>
+
+          <div class="score-block">
+            <div class="score-number {% if c.overall_score >= 70 %}score-high{% elif c.overall_score >= 40 %}score-mid{% else %}score-low{% endif %}">
+              {{ c.overall_score }}%
+            </div>
+            <div class="score-label">overall match</div>
+          </div>
+
+          <div class="skill-tags">
+            {% for skill in c.matched_skills %}
+              <span class="tag tag-matched">{{ skill }}</span>
+            {% endfor %}
+            {% for skill in c.missing_skills %}
+              <span class="tag tag-missing">{{ skill }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No candidates found for this job yet.</p>
+        <a href="{{ url_for('screen') }}" class="btn btn-primary">Screen resumes</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

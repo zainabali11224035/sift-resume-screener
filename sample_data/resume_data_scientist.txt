@@ -1,0 +1,13 @@
+Hina Malik
+hina.malik@example.com | 0300-1122334
+
+Summary
+Data scientist with 3 years of experience in machine learning and analytics.
+
+Skills
+Python, Pandas, NumPy, Scikit-learn, TensorFlow, Machine Learning, Data Analysis, SQL, Data Visualization, Matplotlib
+
+Experience
+Data Scientist, InsightWorks (2022-2025)
+- Built machine learning models using scikit-learn and TensorFlow
+- Performed data analysis and visualization using Pandas and Matplotlib
