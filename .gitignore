@@ -1,0 +1,5 @@
+resume_screener.db 
+uploads/ 
+__pycache__/ 
+*.pyc 
+.pytest_cache/
