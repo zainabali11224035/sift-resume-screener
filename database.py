@@ -73,8 +73,52 @@ def init_db():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (job_id) REFERENCES jobs (id) ON DELETE CASCADE
             );
+
+            CREATE TABLE IF NOT EXISTS skills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL
+            );
             """
         )
+
+
+def seed_skills_if_empty(default_skills):
+    """
+    Populate the skills table from a starter list, but only if it's
+    currently empty. Lets the skill list live in the database (so admins
+    can edit it) while still shipping with a sensible default.
+    """
+    with get_connection() as conn:
+        count = conn.execute("SELECT COUNT(*) as c FROM skills").fetchone()["c"]
+        if count == 0:
+            conn.executemany(
+                "INSERT OR IGNORE INTO skills (name) VALUES (?)",
+                [(s,) for s in sorted(default_skills)],
+            )
+
+
+def get_all_skill_names():
+    with get_connection() as conn:
+        rows = conn.execute("SELECT name FROM skills ORDER BY name ASC").fetchall()
+        return {row["name"] for row in rows}
+
+
+def list_skills():
+    """Returns skills with their ids, for rendering a management UI."""
+    with get_connection() as conn:
+        rows = conn.execute("SELECT * FROM skills ORDER BY name ASC").fetchall()
+        return [dict(row) for row in rows]
+
+
+def add_skill(name):
+    name = name.strip().lower()
+    with get_connection() as conn:
+        conn.execute("INSERT OR IGNORE INTO skills (name) VALUES (?)", (name,))
+
+
+def delete_skill(skill_id):
+    with get_connection() as conn:
+        conn.execute("DELETE FROM skills WHERE id = ?", (skill_id,))
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +169,14 @@ def count_admins():
             "SELECT COUNT(*) as c FROM users WHERE role = 'admin'"
         ).fetchone()
         return row["c"]
+
+
+def update_user_password(user_id, new_password_hash):
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (new_password_hash, user_id),
+        )
 
 
 def add_job(title, description, required_skills, created_by=None):
@@ -215,3 +267,41 @@ def clear_all():
     """Wipe all data -- used between test runs and for a manual reset."""
     with get_connection() as conn:
         conn.executescript("DELETE FROM candidates; DELETE FROM jobs;")
+
+
+def delete_job(job_id):
+    with get_connection() as conn:
+        conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+
+
+def get_dashboard_stats(user_id, role):
+    """
+    Summary numbers for the dashboard header:
+    total job postings, total candidates screened, average match score.
+    Admins see team-wide numbers; employees see only their own.
+    """
+    with get_connection() as conn:
+        if role == "admin":
+            jobs_row = conn.execute("SELECT COUNT(*) as c FROM jobs").fetchone()
+            cand_row = conn.execute(
+                "SELECT COUNT(*) as c, AVG(overall_score) as avg_score FROM candidates"
+            ).fetchone()
+        else:
+            jobs_row = conn.execute(
+                "SELECT COUNT(*) as c FROM jobs WHERE created_by = ?", (user_id,)
+            ).fetchone()
+            cand_row = conn.execute(
+                """
+                SELECT COUNT(*) as c, AVG(overall_score) as avg_score
+                FROM candidates
+                WHERE job_id IN (SELECT id FROM jobs WHERE created_by = ?)
+                """,
+                (user_id,),
+            ).fetchone()
+
+        avg_score = cand_row["avg_score"]
+        return {
+            "total_jobs": jobs_row["c"],
+            "total_candidates": cand_row["c"],
+            "avg_score": round(avg_score, 1) if avg_score is not None else None,
+        }

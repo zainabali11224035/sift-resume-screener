@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Manage skills — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container">
+    <h1>Manage skills</h1>
+    <p>These are the skills Sift looks for in resumes and job descriptions.</p>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container" style="max-width: 760px;">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card" style="margin-bottom: 28px;">
+      <h3 style="margin-top: 0;">Add a new skill</h3>
+      <p style="color: var(--slate); font-size: 13.5px; margin-top: -8px;">
+        E.g. "graphql", "swift", "figma" — lowercase, no punctuation needed.
+      </p>
+      <form method="POST" action="{{ url_for('manage_skills') }}" style="display: flex; gap: 12px; align-items: flex-end;">
+        <div class="field" style="flex: 1; margin-bottom: 0;">
+          <input type="text" name="skill_name" placeholder="e.g. graphql" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add skill</button>
+      </form>
+    </div>
+
+    <h3>Current skills ({{ skills|length }})</h3>
+    <div class="skill-tags" style="gap: 10px;">
+      {% for skill in skills %}
+      <form method="POST" action="{{ url_for('delete_skill', skill_id=skill.id) }}" style="display: inline;" onsubmit="return confirm('Remove {{ skill.name }} from the recognized skills list?');">
+        <button type="submit" class="tag tag-removable">{{ skill.name }} ×</button>
+      </form>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

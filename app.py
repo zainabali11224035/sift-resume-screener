@@ -35,6 +35,7 @@ app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024  # 20 MB total upload cap
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 database.init_db()
+database.seed_skills_if_empty(resume_parser.SKILLS_DB)
 ensure_default_admin()
 
 login_manager.init_app(app)
@@ -86,7 +87,8 @@ def logout():
 @login_required
 def home():
     jobs = database.get_jobs_for_user(current_user.id, current_user.role)
-    return render_template("dashboard.html", jobs=jobs)
+    stats = database.get_dashboard_stats(current_user.id, current_user.role)
+    return render_template("dashboard.html", jobs=jobs, stats=stats)
 
 
 @app.route("/screen", methods=["GET", "POST"])
@@ -108,17 +110,18 @@ def screen():
         flash("Please upload at least one resume in PDF, DOCX, or TXT format.", "error")
         return redirect(url_for("screen"))
 
-    jd_parsed = resume_parser.parse_job_description(jd_text)
+    jd_parsed = resume_parser.parse_job_description(jd_text, skills=database.get_all_skill_names())
     job_id = database.add_job(job_title, jd_text, jd_parsed.skills, created_by=current_user.id)
 
     resumes = []
     parse_errors = []
+    skill_set = database.get_all_skill_names()
     for f in valid_files:
         temp_name = f"{uuid.uuid4().hex}_{f.filename}"
         temp_path = os.path.join(app.config["UPLOAD_FOLDER"], temp_name)
         f.save(temp_path)
         try:
-            parsed = resume_parser.parse_resume(temp_path)
+            parsed = resume_parser.parse_resume(temp_path, skills=skill_set)
             resumes.append((temp_name, parsed))
         except Exception as e:
             parse_errors.append(f"{f.filename}: could not be read ({e})")
@@ -199,6 +202,49 @@ def guidelines():
     return render_template("guidelines.html")
 
 
+@app.route("/account/password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        user_row = database.get_user_by_id(current_user.id)
+
+        if not verify_password(user_row["password_hash"], current_password):
+            flash("Your current password is incorrect.", "error")
+        elif len(new_password) < 6:
+            flash("New password must be at least 6 characters.", "error")
+        elif new_password != confirm_password:
+            flash("New password and confirmation don't match.", "error")
+        else:
+            database.update_user_password(current_user.id, hash_password(new_password))
+            flash("Password updated successfully.", "success")
+            return redirect(url_for("home"))
+
+        return redirect(url_for("change_password"))
+
+    return render_template("change_password.html")
+
+
+@app.route("/jobs/<int:job_id>/delete", methods=["POST"])
+@login_required
+def delete_job(job_id):
+    job = database.get_job(job_id)
+    if not job:
+        flash("That job posting could not be found.", "error")
+        return redirect(url_for("home"))
+
+    if not current_user.is_admin and job.get("created_by") != current_user.id:
+        flash("You don't have access to that job posting.", "error")
+        return redirect(url_for("home"))
+
+    database.delete_job(job_id)
+    flash(f"Deleted job posting: {job['title']}.", "success")
+    return redirect(url_for("home"))
+
+
 # ---------------------------------------------------------------------------
 # Admin-only: employee management
 # ---------------------------------------------------------------------------
@@ -251,6 +297,34 @@ def delete_employee(user_id):
     database.delete_user(user_id)
     flash(f"Removed account: {target['username']}.", "success")
     return redirect(url_for("manage_employees"))
+
+
+@app.route("/admin/skills", methods=["GET", "POST"])
+@login_required
+@admin_required
+def manage_skills():
+    if request.method == "POST":
+        new_skill = request.form.get("skill_name", "").strip().lower()
+        if not new_skill:
+            flash("Skill name can't be empty.", "error")
+        elif new_skill in database.get_all_skill_names():
+            flash(f"'{new_skill}' is already in the list.", "error")
+        else:
+            database.add_skill(new_skill)
+            flash(f"Added skill: {new_skill}", "success")
+        return redirect(url_for("manage_skills"))
+
+    skills = database.list_skills()
+    return render_template("skills.html", skills=skills)
+
+
+@app.route("/admin/skills/<int:skill_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def delete_skill(skill_id):
+    database.delete_skill(skill_id)
+    flash("Skill removed.", "success")
+    return redirect(url_for("manage_skills"))
 
 
 # ---------------------------------------------------------------------------

@@ -92,11 +92,21 @@ def extract_phone(text):
     return match.group(0).strip() if match else None
 
 
-def extract_skills(text):
-    """Match known skills against the text. Case-insensitive, whole-phrase."""
+def extract_skills(text, skills=None):
+    """
+    Match known skills against the text. Case-insensitive, whole-phrase.
+
+    `skills` lets the caller pass a custom/updated skill set (e.g. one
+    fetched from the database, which admins can edit). Falls back to the
+    built-in SKILLS_DB when not provided, so this stays independently
+    testable without needing a database.
+    """
+    if skills is None:
+        skills = SKILLS_DB
+
     text_lower = text.lower()
     found = set()
-    for skill in SKILLS_DB:
+    for skill in skills:
         # Word-boundary-ish match so "java" doesn't match inside "javascript"
         pattern = r"(?<![a-zA-Z0-9+#])" + re.escape(skill) + r"(?![a-zA-Z0-9+#])"
         if re.search(pattern, text_lower):
@@ -130,7 +140,7 @@ def extract_name(text):
     return "Unknown Candidate"
 
 
-def parse_resume(file_path):
+def parse_resume(file_path, skills=None):
     """Parse a resume file into a ParsedDocument."""
     text = extract_text_from_file(file_path)
     return ParsedDocument(
@@ -138,15 +148,15 @@ def parse_resume(file_path):
         name=extract_name(text),
         email=extract_email(text),
         phone=extract_phone(text),
-        skills=extract_skills(text),
+        skills=extract_skills(text, skills=skills),
         experience_years=extract_experience_years(text),
     )
 
 
-def parse_job_description(text):
+def parse_job_description(text, skills=None):
     """Parse a pasted job description string into a ParsedDocument."""
     return ParsedDocument(
         raw_text=text,
-        skills=extract_skills(text),
+        skills=extract_skills(text, skills=skills),
         experience_years=extract_experience_years(text),
     )
