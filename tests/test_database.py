@@ -141,3 +141,48 @@ def test_dashboard_stats_scoped_to_employee():
     stats = database.get_dashboard_stats(emp1, "employee")
     assert stats["total_jobs"] == 1
     assert stats["total_candidates"] == 1
+
+
+def test_admin_overview_stats():
+    database.create_user("admin1", "hash", "admin")
+    database.create_user("emp1", "hash", "employee")
+    database.create_user("emp2", "hash", "employee")
+    database.add_skill("python")
+    database.add_skill("sql")
+    job_id = database.add_job("Role", "desc", {"python"}, created_by=1)
+    database.add_candidate_result(job_id, {"name": "A", "overall_score": 80})
+
+    stats = database.get_admin_overview_stats()
+    assert stats["total_admins"] == 1
+    assert stats["total_employees"] == 2
+    assert stats["total_jobs"] == 1
+    assert stats["total_candidates"] == 1
+    assert stats["total_skills"] == 2
+
+
+def test_get_recent_jobs_returns_newest_first():
+    admin_id = database.create_user("admin1", "hash", "admin")
+    database.add_job("Older Job", "desc", {"python"}, created_by=admin_id)
+    database.add_job("Newer Job", "desc", {"sql"}, created_by=admin_id)
+
+    recent = database.get_recent_jobs(limit=5)
+    assert recent[0]["title"] == "Newer Job"
+    assert recent[1]["title"] == "Older Job"
+
+
+def test_get_recent_jobs_respects_limit():
+    admin_id = database.create_user("admin1", "hash", "admin")
+    for i in range(10):
+        database.add_job(f"Job {i}", "desc", {"python"}, created_by=admin_id)
+
+    recent = database.get_recent_jobs(limit=3)
+    assert len(recent) == 3
+
+
+def test_get_recent_users():
+    database.create_user("first", "hash", "employee")
+    database.create_user("second", "hash", "employee")
+
+    recent = database.get_recent_users(limit=5)
+    assert len(recent) == 2
+    assert recent[0]["username"] == "second"  # newest first

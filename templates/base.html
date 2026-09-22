@@ -15,8 +15,7 @@
     <div class="nav-links">
       <a href="{{ url_for('guidelines') }}">Guidelines</a>
       {% if current_user.is_admin %}
-      <a href="{{ url_for('manage_employees') }}">Employees</a>
-      <a href="{{ url_for('manage_skills') }}">Skills</a>
+      <a href="{{ url_for('admin_panel') }}">Admin Panel</a>
       {% endif %}
       <a href="{{ url_for('change_password') }}">Account</a>
       <span class="nav-user">{{ current_user.username }} <span class="role-tag role-{{ current_user.role }}">{{ current_user.role }}</span></span>

@@ -249,6 +249,18 @@ def delete_job(job_id):
 # Admin-only: employee management
 # ---------------------------------------------------------------------------
 
+@app.route("/admin")
+@login_required
+@admin_required
+def admin_panel():
+    stats = database.get_admin_overview_stats()
+    recent_jobs = database.get_recent_jobs(limit=8)
+    recent_users = database.get_recent_users(limit=5)
+    return render_template(
+        "admin_panel.html", stats=stats, recent_jobs=recent_jobs, recent_users=recent_users
+    )
+
+
 @app.route("/admin/employees", methods=["GET", "POST"])
 @login_required
 @admin_required

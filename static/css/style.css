@@ -510,6 +510,10 @@ textarea { resize: vertical; min-height: 160px; }
   margin-bottom: 28px;
 }
 
+.stats-row-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
 .stat-card {
   background: #fff;
   border: 1px solid var(--line);
@@ -529,6 +533,56 @@ textarea { resize: vertical; min-height: 160px; }
 .stat-label {
   font-size: 13px;
   color: var(--slate);
+}
+
+.breadcrumb-back {
+  display: inline-block;
+  font-size: 13.5px;
+  color: rgba(247, 245, 239, 0.6);
+  text-decoration: none;
+  margin-bottom: 14px;
+}
+
+.breadcrumb-back:hover { color: var(--paper); }
+
+.admin-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.panel-link-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 26px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s ease, transform 0.12s ease;
+  display: block;
+}
+
+.panel-link-card:hover { border-color: var(--amber); transform: translateY(-1px); }
+
+.panel-link-icon { font-size: 24px; margin-bottom: 12px; }
+
+.panel-link-card h3 { margin: 0 0 6px; font-size: 17px; }
+.panel-link-card p { margin: 0; color: var(--slate); font-size: 14px; }
+
+.admin-activity-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 32px;
+}
+
+.activity-heading {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--slate);
+  margin: 0 0 14px;
+  font-weight: 600;
 }
 
 .tag-removable {
@@ -652,6 +706,9 @@ textarea { resize: vertical; min-height: 160px; }
   .candidate-card { grid-template-columns: 1fr; text-align: left; }
   .score-block { text-align: left; }
   .stats-row { grid-template-columns: 1fr; }
+  .stats-row-5 { grid-template-columns: 1fr 1fr; }
+  .admin-panel-grid { grid-template-columns: 1fr; }
+  .admin-activity-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

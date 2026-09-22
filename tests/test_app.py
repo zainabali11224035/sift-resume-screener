@@ -188,3 +188,27 @@ def test_guidelines_page_requires_login(client):
     create_employee_and_login(client)
     response = client.get("/guidelines")
     assert response.status_code == 200
+
+
+def test_employee_cannot_access_admin_panel(client):
+    create_employee_and_login(client)
+    response = client.get("/admin")
+    assert response.status_code == 403
+
+
+def test_admin_can_access_admin_panel(client):
+    create_admin_and_login(client)
+    response = client.get("/admin")
+    assert response.status_code == 200
+    assert b"Admin Panel" in response.data
+
+
+def test_admin_panel_shows_correct_stats(client):
+    create_admin_and_login(client)
+    database.create_user("emp1", "hash", "employee")
+    job_id = database.add_job("Test Job", "desc", {"python"}, created_by=1)
+    database.add_candidate_result(job_id, {"name": "Cand", "overall_score": 75})
+
+    response = client.get("/admin")
+    assert b"Test Job" in response.data
+    assert b"emp1" in response.data

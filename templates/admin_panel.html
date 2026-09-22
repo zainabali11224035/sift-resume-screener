@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container">
+    <h1>Admin Panel</h1>
+    <p>System overview and controls for Sift.</p>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="stats-row stats-row-5">
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_employees }}</div>
+        <div class="stat-label">Employees</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_admins }}</div>
+        <div class="stat-label">Admins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_jobs }}</div>
+        <div class="stat-label">Job postings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_candidates }}</div>
+        <div class="stat-label">Candidates screened</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_skills }}</div>
+        <div class="stat-label">Skills tracked</div>
+      </div>
+    </div>
+
+    <div class="admin-panel-grid">
+      <a href="{{ url_for('manage_employees') }}" class="panel-link-card">
+        <div class="panel-link-icon">👥</div>
+        <h3>Manage employees</h3>
+        <p>Add or remove accounts, assign admin or employee roles.</p>
+      </a>
+      <a href="{{ url_for('manage_skills') }}" class="panel-link-card">
+        <div class="panel-link-icon">🎯</div>
+        <h3>Manage skills</h3>
+        <p>Edit the list of skills Sift recognizes in resumes and job posts.</p>
+      </a>
+    </div>
+
+    <div class="admin-activity-grid">
+      <div>
+        <h3 class="activity-heading">Recent job postings</h3>
+        <div class="candidate-list">
+          {% for job in recent_jobs %}
+          <a href="{{ url_for('results', job_id=job.id) }}" class="job-row">
+            <div>
+              <h3>{{ job.title }}</h3>
+              <div class="meta">
+                {{ job.candidate_count }} candidate{{ 's' if job.candidate_count != 1 else '' }}
+                · screened by {{ job.created_by_name or "Unknown" }} · {{ job.created_at }}
+              </div>
+            </div>
+            <span class="job-row-arrow">View →</span>
+          </a>
+          {% else %}
+          <div class="empty-state" style="padding: 32px;">
+            <p>No job postings yet.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <h3 class="activity-heading">Recently added accounts</h3>
+        <div class="candidate-list">
+          {% for user in recent_users %}
+          <div class="user-row">
+            <div>
+              <strong>{{ user.username }}</strong>
+              <span class="role-tag role-{{ user.role }}">{{ user.role }}</span>
+            </div>
+            <span style="font-size: 13px; color: var(--slate);">{{ user.created_at }}</span>
+          </div>
+          {% else %}
+          <div class="empty-state" style="padding: 32px;">
+            <p>No accounts yet.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
