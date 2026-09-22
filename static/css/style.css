@@ -14,10 +14,28 @@
   --line: rgba(21, 26, 33, 0.12);
   --line-dark: rgba(247, 245, 239, 0.14);
 
+  /* Theme-aware tokens: --ink/--paper stay fixed (used by the permanently
+     dark "slab" sections like the hero and workspace header). These are
+     the ones that actually flip between light and dark mode. */
+  --text: var(--ink);
+  --bg: var(--paper);
+  --surface: #fff;
+
   --font-display: "Fraunces", Georgia, serif;
   --font-body: "IBM Plex Sans", -apple-system, sans-serif;
 
   --radius: 6px;
+}
+
+:root[data-theme="dark"] {
+  --text: #ECE9E1;
+  --bg: #14171C;
+  --surface: #1B1F26;
+  --paper-dim: #262B33;
+  --slate: #9099A6;
+  --line: rgba(236, 233, 225, 0.14);
+  --coral: #E27C5C;
+  --green: #6FBF8F;
 }
 
 * { box-sizing: border-box; }
@@ -27,10 +45,11 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   font-family: var(--font-body);
-  color: var(--ink);
-  background: var(--paper);
+  color: var(--text);
+  background: var(--bg);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 a { color: inherit; }
@@ -83,7 +102,27 @@ img { max-width: 100%; }
   transition: color 0.15s ease;
 }
 
-.nav-links a:hover { color: var(--ink); }
+.nav-links a:hover { color: var(--text); }
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 20px;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+
+.theme-icon-dark { display: none; }
+:root[data-theme="dark"] .theme-icon-light { display: none; }
+:root[data-theme="dark"] .theme-icon-dark { display: inline; }
 
 .nav-cta {
   background: var(--ink);
@@ -239,7 +278,7 @@ img { max-width: 100%; }
 }
 
 .feature {
-  background: var(--paper);
+  background: var(--bg);
   padding: 32px;
 }
 
@@ -286,7 +325,7 @@ img { max-width: 100%; }
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -322,7 +361,7 @@ img { max-width: 100%; }
 .workspace-body { padding: 44px 32px 96px; }
 
 .card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 32px;
@@ -351,8 +390,8 @@ input[type="text"], input[type="password"], input[type="email"], textarea, selec
   border-radius: var(--radius);
   font-family: var(--font-body);
   font-size: 15px;
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--text);
 }
 
 input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, textarea:focus, input[type="file"]:focus, select:focus {
@@ -367,7 +406,7 @@ textarea { resize: vertical; min-height: 160px; }
   border-radius: var(--radius);
   padding: 28px;
   text-align: center;
-  background: var(--paper);
+  background: var(--bg);
 }
 
 .file-drop input { width: 100%; }
@@ -391,7 +430,7 @@ textarea { resize: vertical; min-height: 160px; }
    Results table
    ========================================================= */
 .chart-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 28px 32px;
@@ -444,7 +483,7 @@ textarea { resize: vertical; min-height: 160px; }
 }
 
 .auth-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 40px;
@@ -456,7 +495,7 @@ textarea { resize: vertical; min-height: 160px; }
    Dashboard job rows
    ========================================================= */
 .job-row {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 20px 26px;
@@ -464,7 +503,7 @@ textarea { resize: vertical; min-height: 160px; }
   justify-content: space-between;
   align-items: center;
   text-decoration: none;
-  color: var(--ink);
+  color: var(--text);
   transition: border-color 0.15s ease;
 }
 
@@ -478,7 +517,7 @@ textarea { resize: vertical; min-height: 160px; }
    Employee management
    ========================================================= */
 .user-row {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 16px 22px;
@@ -515,7 +554,7 @@ textarea { resize: vertical; min-height: 160px; }
 }
 
 .stat-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 22px 24px;
@@ -525,7 +564,7 @@ textarea { resize: vertical; min-height: 160px; }
   font-family: var(--font-display);
   font-size: 30px;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--text);
   line-height: 1;
   margin-bottom: 6px;
 }
@@ -547,18 +586,18 @@ textarea { resize: vertical; min-height: 160px; }
 
 .admin-panel-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 16px;
   margin-bottom: 40px;
 }
 
 .panel-link-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 26px;
   text-decoration: none;
-  color: var(--ink);
+  color: var(--text);
   transition: border-color 0.15s ease, transform 0.12s ease;
   display: block;
 }
@@ -590,7 +629,7 @@ textarea { resize: vertical; min-height: 160px; }
   cursor: pointer;
   font-family: var(--font-body);
   background: var(--paper-dim);
-  color: var(--ink-soft);
+  color: var(--text);
 }
 
 .tag-removable:hover { background: #FBE7E1; color: var(--coral); }
@@ -607,7 +646,7 @@ textarea { resize: vertical; min-height: 160px; }
 .candidate-list { display: flex; flex-direction: column; gap: 14px; }
 
 .candidate-card {
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 22px 26px;
@@ -670,7 +709,7 @@ textarea { resize: vertical; min-height: 160px; }
 .guidelines-body h2:first-child { margin-top: 0; }
 
 .guidelines-body p, .guidelines-body li {
-  color: var(--ink-soft);
+  color: var(--text);
   font-size: 15.5px;
 }
 
@@ -693,6 +732,59 @@ textarea { resize: vertical; min-height: 160px; }
   color: var(--slate);
   font-size: 13.5px;
 }
+
+/* =========================================================
+   Activity log / audit trail
+   ========================================================= */
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.activity-table th {
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--slate);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-dim);
+}
+
+.activity-table td {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  color: var(--text);
+}
+
+.activity-table tr:last-child td { border-bottom: none; }
+
+.activity-table .mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--slate);
+  white-space: nowrap;
+}
+
+.action-tag {
+  font-size: 11.5px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--paper-dim);
+  color: var(--slate);
+}
+
+.action-login, .action-create_user { background: #E4F0E8; color: var(--green); }
+.action-logout { background: var(--paper-dim); color: var(--slate); }
+.action-account_locked { background: #FBE7E1; color: var(--coral); }
+.action-delete_user, .action-delete_job, .action-delete_skill { background: #FBE7E1; color: var(--coral); }
+.action-screen { background: #FBF1DC; color: var(--amber-deep); }
+.action-password_change, .action-update_email { background: var(--paper-dim); color: var(--text); }
 
 /* =========================================================
    Responsive

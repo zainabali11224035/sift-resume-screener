@@ -22,7 +22,49 @@ the way they did (no black-box AI decision-making).
 - **Frontend:** server-rendered HTML/CSS (no JS framework required)
 - **Testing:** pytest
 
-## Roles & login
+## What's new
+
+Recent additions on top of the original screening tool:
+
+- **Home link** in the navbar for quick access back to the dashboard.
+- **Login lockout** — after 5 failed login attempts, an account is
+  locked for 15 minutes (configurable in `database.py`,
+  `MAX_FAILED_ATTEMPTS` / `LOCKOUT_MINUTES`).
+- **Dark / light mode** — toggle button in the navbar, preference saved
+  per-browser (no server round-trip).
+- **Activity log / audit trail** — Admin Panel → *Activity log* shows
+  every login, logout, lockout, screening run, and account/skill change,
+  newest first.
+- **Skill demand chart** — Admin Panel → *Skill demand* shows which
+  skills appear most often across every job description screened so
+  far, as a bar chart.
+- **Email notifications** (optional) — new-account welcome emails,
+  account-lockout alerts, and screening-complete notifications. Off by
+  default; see "Email notifications" below to turn it on.
+
+## Email notifications
+
+Notifications are sent through `mailer.py` using plain SMTP. If it isn't
+configured, emails are just printed to the console instead of sent — the
+app works fine either way.
+
+To send real emails, set these environment variables before running the
+app:
+
+```bash
+export SIFT_SMTP_HOST=smtp.gmail.com
+export SIFT_SMTP_PORT=587
+export SIFT_SMTP_USER=your_email@gmail.com
+export SIFT_SMTP_PASSWORD=your_app_password
+export SIFT_FROM_EMAIL=your_email@gmail.com   # optional, defaults to SIFT_SMTP_USER
+```
+
+(For Gmail, use an **App Password**, not your normal login password.)
+
+Each user can set their own notification email from **Account** →
+*Notification email* in the nav.
+
+
 
 Sift now has account-based access:
 
@@ -52,13 +94,15 @@ fill in the "Add a new account" form.
 resume_screener/
 ├── app.py              # Flask routes / web layer
 ├── auth.py              # Login, password hashing, role checks
+├── mailer.py            # Optional SMTP email notifications
 ├── parser.py           # Resume & job description parsing
 ├── matcher.py           # Scoring & ranking engine
-├── database.py         # SQLite data access layer (users, jobs, candidates)
+├── database.py         # SQLite data access layer (users, jobs, candidates, activity log)
 ├── templates/           # HTML pages (Jinja2)
-├── static/css/         # Stylesheet
+├── static/css/         # Stylesheet (incl. dark mode)
+├── static/js/          # Dark mode toggle
 ├── sample_data/        # Sample resumes for testing/demo
-├── tests/               # pytest unit tests (34 tests)
+├── tests/               # pytest unit tests
 └── requirements.txt
 ```
 

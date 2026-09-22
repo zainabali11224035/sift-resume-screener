@@ -28,7 +28,7 @@
             {% set y = loop.index0 * 48 + 10 %}
             {% set bar_width = (c.overall_score / 100 * 460)|round(1) %}
             {% set bar_color = 'var(--green)' if c.overall_score >= 70 else ('var(--amber-deep)' if c.overall_score >= 40 else 'var(--coral)') %}
-            <text x="0" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--ink)">{{ c.name or "Unknown" }}</text>
+            <text x="0" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--text)">{{ c.name or "Unknown" }}</text>
             <rect x="150" y="{{ y }}" width="460" height="20" rx="4" fill="var(--paper-dim)"></rect>
             <rect x="150" y="{{ y }}" width="{{ bar_width }}" height="20" rx="4" fill="{{ bar_color }}"></rect>
             <text x="{{ 150 + bar_width + 10 }}" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="12.5" fill="var(--slate)">{{ c.overall_score }}%</text>
@@ -38,7 +38,7 @@
 
       <div class="results-toolbar">
         <h2>Sorted by overall match score</h2>
-        <a href="{{ url_for('export_csv', job_id=job.id) }}" class="btn btn-ghost" style="border-color: var(--line); color: var(--ink);">Export CSV</a>
+        <a href="{{ url_for('export_csv', job_id=job.id) }}" class="btn btn-ghost" style="border-color: var(--line); color: var(--text);">Export CSV</a>
       </div>
 
       <div class="candidate-list">
