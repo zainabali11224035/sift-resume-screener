@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Skill Demand — Sift{% endblock %}
+{% block content %}
+
+<div class="workspace-header">
+  <div class="container">
+    <a href="{{ url_for('admin_panel') }}" class="breadcrumb-back">← Admin Panel</a>
+    <h1>Skill demand</h1>
+    <p>Which skills show up most often across the job descriptions screened so far.</p>
+  </div>
+</div>
+
+<div class="workspace-body">
+  <div class="container">
+
+    {% if demand %}
+      {% set max_count = demand[0].count %}
+      <div class="chart-card">
+        <div class="chart-title">Most requested skills across all job postings</div>
+        <svg class="score-chart" viewBox="0 0 640 {{ demand|length * 40 + 20 }}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bar chart of skill demand">
+          {% for row in demand %}
+            {% set y = loop.index0 * 40 + 10 %}
+            {% set bar_width = (row.count / max_count * 420)|round(1) %}
+            <text x="0" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--text)">{{ row.skill }}</text>
+            <rect x="180" y="{{ y }}" width="420" height="18" rx="4" fill="var(--paper-dim)"></rect>
+            <rect x="180" y="{{ y }}" width="{{ bar_width }}" height="18" rx="4" fill="var(--amber)"></rect>
+            <text x="{{ 180 + bar_width + 10 }}" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="12.5" fill="var(--slate)">{{ row.count }}</text>
+          {% endfor %}
+        </svg>
+      </div>
+
+      <div class="card">
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th>Times required</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in demand %}
+            <tr>
+              <td>{{ row.skill }}</td>
+              <td>{{ row.count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No job postings screened yet — skill demand will show up here once you do.</p>
+        <a href="{{ url_for('screen') }}" class="btn btn-primary">Screen resumes</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

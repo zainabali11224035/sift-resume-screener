@@ -32,6 +32,7 @@ class User(UserMixin):
         self.id = row["id"]
         self.username = row["username"]
         self.role = row["role"]
+        self.email = row["email"] if "email" in row.keys() else None
 
     @property
     def is_admin(self):

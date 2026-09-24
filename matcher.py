@@ -91,6 +91,9 @@ def rank_candidates(resumes, job_description):
         result["email"] = resume.email
         result["phone"] = resume.phone
         result["experience_years"] = resume.experience_years
+        result["education"] = resume.education
+        result["certifications"] = resume.certifications
+        result["links"] = resume.links
         results.append(result)
 
     results.sort(key=lambda r: r["overall_score"], reverse=True)

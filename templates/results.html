@@ -28,7 +28,7 @@
             {% set y = loop.index0 * 48 + 10 %}
             {% set bar_width = (c.overall_score / 100 * 460)|round(1) %}
             {% set bar_color = 'var(--green)' if c.overall_score >= 70 else ('var(--amber-deep)' if c.overall_score >= 40 else 'var(--coral)') %}
-            <text x="0" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--ink)">{{ c.name or "Unknown" }}</text>
+            <text x="0" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="var(--text)">{{ c.name or "Unknown" }}</text>
             <rect x="150" y="{{ y }}" width="460" height="20" rx="4" fill="var(--paper-dim)"></rect>
             <rect x="150" y="{{ y }}" width="{{ bar_width }}" height="20" rx="4" fill="{{ bar_color }}"></rect>
             <text x="{{ 150 + bar_width + 10 }}" y="{{ y + 14 }}" font-family="IBM Plex Sans, sans-serif" font-size="12.5" fill="var(--slate)">{{ c.overall_score }}%</text>
@@ -38,7 +38,7 @@
 
       <div class="results-toolbar">
         <h2>Sorted by overall match score</h2>
-        <a href="{{ url_for('export_csv', job_id=job.id) }}" class="btn btn-ghost" style="border-color: var(--line); color: var(--ink);">Export CSV</a>
+        <a href="{{ url_for('export_csv', job_id=job.id) }}" class="btn btn-ghost" style="border-color: var(--line); color: var(--text);">Export CSV</a>
       </div>
 
       <div class="candidate-list">
@@ -69,6 +69,31 @@
               <span class="tag tag-missing">{{ skill }}</span>
             {% endfor %}
           </div>
+
+          {% if c.education or c.certifications or c.links %}
+          <div class="candidate-extra">
+            {% if c.education %}
+            <div class="extra-block">
+              <span class="extra-label">Education</span>
+              {% for e in c.education %}<div class="extra-line">{{ e.raw }}</div>{% endfor %}
+            </div>
+            {% endif %}
+            {% if c.certifications %}
+            <div class="extra-block">
+              <span class="extra-label">Certifications</span>
+              {% for cert in c.certifications %}<div class="extra-line">{{ cert }}</div>{% endfor %}
+            </div>
+            {% endif %}
+            {% if c.links %}
+            <div class="extra-block">
+              <span class="extra-label">Links</span>
+              {% if c.links.linkedin %}<div class="extra-line"><a href="https://{{ c.links.linkedin }}" target="_blank" rel="noopener">LinkedIn</a></div>{% endif %}
+              {% if c.links.github %}<div class="extra-line"><a href="https://{{ c.links.github }}" target="_blank" rel="noopener">GitHub</a></div>{% endif %}
+              {% if c.links.portfolio %}<div class="extra-line"><a href="https://{{ c.links.portfolio }}" target="_blank" rel="noopener">Portfolio</a></div>{% endif %}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
         </div>
         {% endfor %}
       </div>

@@ -8,6 +8,7 @@ from the storage engine.
 
 import sqlite3
 import json
+from datetime import datetime, timedelta
 from contextlib import contextmanager
 
 DB_PATH = "resume_screener.db"
@@ -73,13 +74,37 @@ def init_db():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (job_id) REFERENCES jobs (id) ON DELETE CASCADE
             );
-
             CREATE TABLE IF NOT EXISTS skills (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT UNIQUE NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS activity_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                username TEXT,
+                action TEXT NOT NULL,
+                details TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
             """
         )
+        # Lightweight migrations for installs that already have a users table
+        # from before lockout/email support existed. SQLite has no
+        # "ADD COLUMN IF NOT EXISTS", so we just swallow the duplicate-column
+        # error on installs that already have the column.
+        for statement in (
+            "ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN locked_until TEXT",
+            "ALTER TABLE users ADD COLUMN email TEXT",
+            "ALTER TABLE candidates ADD COLUMN education TEXT",
+            "ALTER TABLE candidates ADD COLUMN certifications TEXT",
+            "ALTER TABLE candidates ADD COLUMN links TEXT",
+        ):
+            try:
+                conn.execute(statement)
+            except sqlite3.OperationalError:
+                pass  # column already exists
 
 
 def seed_skills_if_empty(default_skills):
@@ -125,12 +150,12 @@ def delete_skill(skill_id):
 # Users
 # ---------------------------------------------------------------------------
 
-def create_user(username, password_hash, role="employee"):
+def create_user(username, password_hash, role="employee", email=None):
     """Insert a new user. Raises sqlite3.IntegrityError if username taken."""
     with get_connection() as conn:
         cursor = conn.execute(
-            "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
-            (username, password_hash, role),
+            "INSERT INTO users (username, password_hash, role, email) VALUES (?, ?, ?, ?)",
+            (username, password_hash, role, email),
         )
         return cursor.lastrowid
 
@@ -177,6 +202,101 @@ def update_user_password(user_id, new_password_hash):
             "UPDATE users SET password_hash = ? WHERE id = ?",
             (new_password_hash, user_id),
         )
+
+
+def update_user_email(user_id, email):
+    with get_connection() as conn:
+        conn.execute("UPDATE users SET email = ? WHERE id = ?", (email, user_id))
+
+
+# ---------------------------------------------------------------------------
+# Login lockout
+# ---------------------------------------------------------------------------
+# After MAX_FAILED_ATTEMPTS wrong passwords in a row, the account is locked
+# for LOCKOUT_MINUTES. A correct login (or the lockout window passing)
+# resets the counter.
+
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_MINUTES = 15
+
+
+def register_failed_login(username):
+    """
+    Bump the failed-attempt counter for a username. If it reaches the
+    threshold, lock the account and return (locked=True, minutes).
+    Returns (locked=False, attempts_left) otherwise. No-op (False, None)
+    if the username doesn't exist, so login can't be used to enumerate users.
+    """
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT id, failed_attempts FROM users WHERE username = ?", (username,)
+        ).fetchone()
+        if not row:
+            return False, None
+
+        attempts = row["failed_attempts"] + 1
+        if attempts >= MAX_FAILED_ATTEMPTS:
+            locked_until = (datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)).isoformat()
+            conn.execute(
+                "UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?",
+                (attempts, locked_until, row["id"]),
+            )
+            return True, LOCKOUT_MINUTES
+        else:
+            conn.execute(
+                "UPDATE users SET failed_attempts = ? WHERE id = ?",
+                (attempts, row["id"]),
+            )
+            return False, MAX_FAILED_ATTEMPTS - attempts
+
+
+def reset_failed_logins(user_id):
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?",
+            (user_id,),
+        )
+
+
+def get_lockout_status(user_row):
+    """
+    Given a user row (dict or sqlite3.Row) that includes locked_until,
+    returns (is_locked, minutes_remaining). Automatically treats an
+    expired lock as not-locked (the counter gets cleared on next
+    successful check via reset_failed_logins).
+    """
+    locked_until = user_row["locked_until"] if user_row else None
+    if not locked_until:
+        return False, 0
+    try:
+        expires = datetime.fromisoformat(locked_until)
+    except ValueError:
+        return False, 0
+    remaining = (expires - datetime.utcnow()).total_seconds()
+    if remaining <= 0:
+        return False, 0
+    return True, max(1, round(remaining / 60))
+
+
+# ---------------------------------------------------------------------------
+# Activity log / audit trail
+# ---------------------------------------------------------------------------
+
+def log_activity(user_id, username, action, details=""):
+    with get_connection() as conn:
+        conn.execute(
+            "INSERT INTO activity_log (user_id, username, action, details) VALUES (?, ?, ?, ?)",
+            (user_id, username, action, details),
+        )
+
+
+def get_activity_log(limit=200):
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM activity_log ORDER BY created_at DESC, id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        return [dict(row) for row in rows]
 
 
 def add_job(title, description, required_skills, created_by=None):
@@ -229,8 +349,8 @@ def add_candidate_result(job_id, result):
             INSERT INTO candidates (
                 job_id, name, email, phone, skills, experience_years,
                 overall_score, skill_score, text_score,
-                matched_skills, missing_skills
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                matched_skills, missing_skills, education, certifications, links
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 job_id,
@@ -244,6 +364,9 @@ def add_candidate_result(job_id, result):
                 result.get("text_score", 0),
                 json.dumps(result.get("matched_skills", [])),
                 json.dumps(result.get("missing_skills", [])),
+                json.dumps(result.get("education", [])),
+                json.dumps(result.get("certifications", [])),
+                json.dumps(result.get("links", {})),
             ),
         )
 
@@ -259,6 +382,9 @@ def get_candidates_for_job(job_id):
             c = dict(row)
             c["matched_skills"] = json.loads(c["matched_skills"] or "[]")
             c["missing_skills"] = json.loads(c["missing_skills"] or "[]")
+            c["education"] = json.loads(c["education"] or "[]")
+            c["certifications"] = json.loads(c["certifications"] or "[]")
+            c["links"] = json.loads(c["links"] or "{}")
             candidates.append(c)
         return candidates
 
@@ -346,6 +472,28 @@ def get_recent_jobs(limit=8):
             (limit,),
         ).fetchall()
         return [dict(row) for row in rows]
+
+
+def get_skill_demand(limit=12):
+    """
+    How often each skill has been REQUIRED across all job postings screened
+    so far -- i.e. what employers are actually asking for. Powers the
+    Skill Demand chart in the Admin Panel.
+    """
+    with get_connection() as conn:
+        rows = conn.execute("SELECT required_skills FROM jobs").fetchall()
+
+    counts = {}
+    for row in rows:
+        try:
+            skills = json.loads(row["required_skills"] or "[]")
+        except (TypeError, ValueError):
+            skills = []
+        for skill in skills:
+            counts[skill] = counts.get(skill, 0) + 1
+
+    ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+    return [{"skill": skill, "count": count} for skill, count in ranked[:limit]]
 
 
 def get_recent_users(limit=5):

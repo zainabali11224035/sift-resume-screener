@@ -23,6 +23,7 @@ from flask_login import (
 import database
 import parser as resume_parser
 import matcher
+import mailer
 from auth import login_manager, User, hash_password, verify_password, admin_required, ensure_default_admin
 
 UPLOAD_FOLDER = "uploads"
@@ -59,11 +60,41 @@ def login():
         password = request.form.get("password", "")
 
         user_row = database.get_user_by_username(username)
+
+        # Already locked out? Don't even check the password.
+        if user_row:
+            is_locked, minutes_left = database.get_lockout_status(user_row)
+            if is_locked:
+                flash(
+                    f"Account locked after too many failed attempts. "
+                    f"Try again in {minutes_left} minute{'s' if minutes_left != 1 else ''}.",
+                    "error",
+                )
+                return redirect(url_for("login"))
+
         if user_row and verify_password(user_row["password_hash"], password):
+            database.reset_failed_logins(user_row["id"])
             login_user(User(user_row))
+            database.log_activity(user_row["id"], user_row["username"], "login", "Signed in")
             flash(f"Welcome back, {user_row['username']}.", "success")
             next_page = request.args.get("next")
             return redirect(next_page or url_for("home"))
+
+        # Wrong password (or unknown username -- we still say the same
+        # generic message so login can't be used to discover valid usernames).
+        if user_row:
+            locked, info = database.register_failed_login(username)
+            if locked:
+                database.log_activity(
+                    user_row["id"], user_row["username"], "account_locked",
+                    f"Locked for {info} minutes after {database.MAX_FAILED_ATTEMPTS} failed attempts",
+                )
+                mailer.notify_account_locked(user_row.get("email"), user_row["username"])
+                flash(
+                    f"Too many failed attempts. Account locked for {info} minutes.",
+                    "error",
+                )
+                return redirect(url_for("login"))
 
         flash("Incorrect username or password.", "error")
         return redirect(url_for("login"))
@@ -74,6 +105,7 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
+    database.log_activity(current_user.id, current_user.username, "logout", "Signed out")
     logout_user()
     flash("You've been logged out.", "success")
     return redirect(url_for("login"))
@@ -135,6 +167,14 @@ def screen():
     ranked = matcher.rank_candidates(resumes, jd_parsed)
     for result in ranked:
         database.add_candidate_result(job_id, result)
+
+    database.log_activity(
+        current_user.id, current_user.username, "screen",
+        f"Screened {len(ranked)} resume(s) for '{job_title}'",
+    )
+    mailer.notify_screening_complete(
+        getattr(current_user, "email", None), current_user.username, job_title, len(ranked)
+    )
 
     if parse_errors:
         flash("Some files were skipped: " + " ".join(parse_errors), "warning")
@@ -220,12 +260,23 @@ def change_password():
             flash("New password and confirmation don't match.", "error")
         else:
             database.update_user_password(current_user.id, hash_password(new_password))
+            database.log_activity(current_user.id, current_user.username, "password_change", "Password updated")
             flash("Password updated successfully.", "success")
             return redirect(url_for("home"))
 
         return redirect(url_for("change_password"))
 
     return render_template("change_password.html")
+
+
+@app.route("/account/email", methods=["POST"])
+@login_required
+def update_email():
+    email = request.form.get("email", "").strip() or None
+    database.update_user_email(current_user.id, email)
+    database.log_activity(current_user.id, current_user.username, "update_email", "Updated notification email")
+    flash("Notification email updated.", "success")
+    return redirect(url_for("change_password"))
 
 
 @app.route("/jobs/<int:job_id>/delete", methods=["POST"])
@@ -241,6 +292,7 @@ def delete_job(job_id):
         return redirect(url_for("home"))
 
     database.delete_job(job_id)
+    database.log_activity(current_user.id, current_user.username, "delete_job", f"Deleted job '{job['title']}'")
     flash(f"Deleted job posting: {job['title']}.", "success")
     return redirect(url_for("home"))
 
@@ -269,6 +321,7 @@ def manage_employees():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
         role = request.form.get("role", "employee")
+        email = request.form.get("email", "").strip() or None
 
         if role not in ("employee", "admin"):
             role = "employee"
@@ -280,7 +333,12 @@ def manage_employees():
         elif database.get_user_by_username(username):
             flash("That username is already taken.", "error")
         else:
-            database.create_user(username, hash_password(password), role)
+            database.create_user(username, hash_password(password), role, email)
+            database.log_activity(
+                current_user.id, current_user.username, "create_user",
+                f"Created account '{username}' ({role})",
+            )
+            mailer.notify_account_created(email, username, role)
             flash(f"Account created for {username} ({role}).", "success")
 
         return redirect(url_for("manage_employees"))
@@ -307,6 +365,7 @@ def delete_employee(user_id):
         return redirect(url_for("manage_employees"))
 
     database.delete_user(user_id)
+    database.log_activity(current_user.id, current_user.username, "delete_user", f"Removed account '{target['username']}'")
     flash(f"Removed account: {target['username']}.", "success")
     return redirect(url_for("manage_employees"))
 
@@ -323,6 +382,7 @@ def manage_skills():
             flash(f"'{new_skill}' is already in the list.", "error")
         else:
             database.add_skill(new_skill)
+            database.log_activity(current_user.id, current_user.username, "add_skill", f"Added skill '{new_skill}'")
             flash(f"Added skill: {new_skill}", "success")
         return redirect(url_for("manage_skills"))
 
@@ -335,8 +395,25 @@ def manage_skills():
 @admin_required
 def delete_skill(skill_id):
     database.delete_skill(skill_id)
+    database.log_activity(current_user.id, current_user.username, "delete_skill", f"Removed skill id {skill_id}")
     flash("Skill removed.", "success")
     return redirect(url_for("manage_skills"))
+
+
+@app.route("/admin/activity")
+@login_required
+@admin_required
+def activity_log():
+    logs = database.get_activity_log(limit=200)
+    return render_template("activity_log.html", logs=logs)
+
+
+@app.route("/admin/skill-demand")
+@login_required
+@admin_required
+def skill_demand():
+    demand = database.get_skill_demand(limit=15)
+    return render_template("skill_demand.html", demand=demand)
 
 
 # ---------------------------------------------------------------------------

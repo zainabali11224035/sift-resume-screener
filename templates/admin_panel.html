@@ -54,6 +54,16 @@
         <h3>Manage skills</h3>
         <p>Edit the list of skills Sift recognizes in resumes and job posts.</p>
       </a>
+      <a href="{{ url_for('activity_log') }}" class="panel-link-card">
+        <div class="panel-link-icon">🕒</div>
+        <h3>Activity log</h3>
+        <p>Audit trail of logins, screenings, lockouts, and account changes.</p>
+      </a>
+      <a href="{{ url_for('skill_demand') }}" class="panel-link-card">
+        <div class="panel-link-icon">📊</div>
+        <h3>Skill demand</h3>
+        <p>See which skills show up most often across job postings.</p>
+      </a>
     </div>
 
     <div class="admin-activity-grid">
