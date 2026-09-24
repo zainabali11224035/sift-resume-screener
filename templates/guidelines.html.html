@@ -35,15 +35,18 @@
     <ul>
       <li><strong>Name</strong> — assumed to be the first line of the resume that isn't an email or phone number. This is a heuristic and can be wrong for unusually formatted resumes.</li>
       <li><strong>Email and phone</strong> — matched via pattern recognition; may miss unusual formats.</li>
-      <li><strong>Skills</strong> — matched against a fixed, editable list of ~60 common technical and professional skills. A skill not in this list will never be detected, even if the candidate has it.</li>
+      <li><strong>Skills</strong> — matched against a fixed, editable list of ~60 common technical and professional skills, plus common synonyms/aliases (e.g. "React.js"/"ReactJS" → React, "JS" → JavaScript, "Amazon Web Services" → AWS, "k8s" → Kubernetes). A skill not in this list — and not recognized as an alias of one — will never be detected, even if the candidate has it.</li>
       <li><strong>Years of experience</strong> — only detected when stated explicitly, e.g. "5 years of experience." Experience implied by a work history timeline is not currently calculated.</li>
+      <li><strong>Education, certifications & links</strong> — resumes are split into sections (Summary, Experience, Education, Skills, Projects, Certifications) by heading detection. From these, Sift best-effort extracts degree/institution/year lines, a certifications list, and LinkedIn/GitHub/portfolio links, shown under each candidate on the Results page. This depends on the resume using recognizable section headings — unconventional layouts may not split cleanly.</li>
     </ul>
 
     <h2>Known limitations</h2>
     <ul>
       <li>This is a first-pass filter, not a hiring decision. A low score does not mean a candidate is unqualified — it means the resume's wording didn't match the job description well.</li>
-      <li>The skills dictionary is fixed at build time. Skills specific to a niche field may not be recognized.</li>
+      <li>The skills dictionary (and its synonym list) is fixed at build time. Skills specific to a niche field, or unlisted alternate phrasings, may not be recognized.</li>
       <li>Name extraction is a best-effort guess and should be spot-checked for resumes with unconventional layouts (e.g. two-column templates).</li>
+      <li>Education/certifications/links extraction relies on the resume having clear section headings; resumes without them, or with headings buried mid-paragraph, won't be split correctly.</li>
+      <li>Text similarity is pure word-overlap (TF-IDF) — it has no real language understanding, so synonymous phrasing outside the skills list (e.g. "built REST APIs" vs. "developed backend services") isn't recognized as related.</li>
       <li>Sift does not verify claims made in a resume — it only measures textual overlap with the job description.</li>
     </ul>
 
